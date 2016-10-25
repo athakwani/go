@@ -38,18 +38,7 @@
         cd $REPO_ROOT 
         go get -d ./...
       '''
-    },
-    {
-      name: "cloud-9-sdk-dependencies",
-      cmd:
-      '''    
-        apt-get install -y build-essential g++ curl libssl-dev apache2-utils libxml2-dev sshfs python2.7 python2.7-dev
-        git clone https://github.com/c9/core.git cloud9
-        cd cloud9
-        scripts/install-sdk.sh
-        sed -i -e 's_127.0.0.1_0.0.0.0_g' configs/standalone.js 
-      '''
-    }     
+    }
   ],
   commands: {
     build: [{
