@@ -5,7 +5,7 @@
   ],  
   env:
   [
-    "GOPATH=$HOME/$REPO_ROOT/",
+    "GOPATH=$REPO_ROOT/",
     "PATH=$PATH:$GOPATH/bin"
   ],
   dependencies: 
