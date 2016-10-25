@@ -1,8 +1,8 @@
 {
   env:
   [
-    "NODE_ENV=development",
-    "PORT=3000"
+    "GOPATH=$HOME/dupper/",
+    "PATH=$PATH:$GOPATH/bin"
   ],
   dependencies: 
   [
