@@ -1,0 +1,138 @@
+{
+  env:
+  [
+    "NODE_ENV=development",
+    "PORT=3000"
+  ],
+  dependencies: 
+  [
+    {
+      name: "linux-dependencies",
+      cmd:
+      '''
+        apt-get install -y vim curl golang make python-pip
+        wget -O /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
+        chmod +x /usr/local/bin/jq
+      '''
+    },
+    {
+      name: "python-packages",
+      cmd:
+      '''
+        pip install --user awscli
+      '''
+    },
+    {
+      name: "go-packages",
+      cmd:
+      '''
+        cd $REPO_ROOT 
+        go get -d ./...
+      '''
+    },
+    {
+      name: "cloud-9-sdk-dependencies",
+      cmd:
+      '''    
+        apt-get install -y build-essential g++ curl libssl-dev apache2-utils libxml2-dev sshfs python2.7 python2.7-dev
+        git clone https://github.com/c9/core.git cloud9
+        cd cloud9
+        scripts/install-sdk.sh
+        sed -i -e 's_127.0.0.1_0.0.0.0_g' configs/standalone.js 
+      '''
+    }     
+  ],
+  commands: {
+    build: [{
+      server:
+      '''
+        cd $REPO_ROOT
+        go build
+      '''
+    }],    
+    test: [{
+      server:
+      '''            
+        cd $REPO_ROOT
+        go test
+      '''
+    }],
+    c9: [{
+      server:
+      '''
+          # Start debugger in background detached from terminal
+          start-stop-daemon -b --start --quiet --oknodo \
+          --pidfile /var/run/c9.pid --exec $HOME/.c9/node/bin/node \
+          -- /root/cloud9/server.js --listen 0.0.0.0 --port 8000 -w $REPO_ROOT
+          exit_code=$?
+          _export exit_code
+      '''
+    },{
+      client:
+      '''
+         # Open browser on Mac if C9 started successfully
+          os="$(uname -s)"
+          if [[ $os == "Darwin" ]]; then
+              [ $exit_code -eq 0 ] && open http://$SERVER_IP:8000/  
+          elif [[ $os == "Linux" ]]; then
+              echo "Cloud 9 Development Environment accesible at http://$SERVER_IP:8000"
+          fi        
+      '''
+    }],    
+    deploy: [{
+        server:
+        '''
+          _region="us-west-1"
+          _binary=""
+          _bucketurl=""
+          _acl="public-read"
+
+          while [ "$#" -gt 0 ]
+          do
+          opt="$1"
+          shift
+          case "$opt" in
+            *)
+              if [[ -z $_binary ]]
+              then
+                _binary="$opt"
+                break
+              fi
+
+              if [[ -z $_bucketurl ]]
+              then
+                _bucketurl="$opt"
+                break
+              fi
+              ;;
+              
+            --region)
+                _region="$opt"
+              ;;
+            --acl)
+                _acl="$opt"
+              ;;
+          esac
+          done          
+ 
+          if [[ "${_bucketurl}" == "" || "${_binary}" == "" ]]; then
+              cat <<-EOM
+                Usage:
+                dupper exec -t $REPO_NAME deploy [OPTIONS] BINARY BUCKETURL"
+                
+                Description:
+                     Deploy binary on AWS S3 bucket.
+
+                Options:
+                  --region STRING    AWS region for S3 bucket, default $_region 
+                  --acl    STRING    AWS acl, default publis-read 
+EOM              
+              exit 1
+          fi
+          
+          aws configure
+          aws --region ${_region} s3 cp ${_binary} ${_s3url}/${_binary} --acl ${_acl}
+        '''
+    }] 
+  }
+}
