@@ -1,4 +1,8 @@
 {
+  ports: 
+  [
+    "8000:8000"    // c9
+  ],  
   env:
   [
     "GOPATH=$HOME/$REPO_ROOT/",
@@ -10,7 +14,7 @@
       name: "linux-dependencies",
       cmd:
       '''
-        apt-get install -y vim curl make python-pip
+        apt-get install -y vim curl make python-pip groff
         wget -O /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
         chmod +x /usr/local/bin/jq
         mkdir $HOME/bin
@@ -23,7 +27,7 @@
       name: "python-packages",
       cmd:
       '''
-        pip install --user awscli
+        pip install awscli --ignore-installed six
       '''
     },
     {
@@ -103,13 +107,9 @@
               if [[ -z $_binary ]]
               then
                 _binary="$opt"
-                break
-              fi
-
-              if [[ -z $_bucketurl ]]
+              elif [[ -z $_bucketurl ]]
               then
                 _bucketurl="$opt"
-                break
               fi
               ;;
               
@@ -121,24 +121,26 @@
               ;;
           esac
           done          
+        
  
           if [[ "${_bucketurl}" == "" || "${_binary}" == "" ]]; then
-              cat <<-EOM
-                Usage:
-                dupper exec -t $REPO_NAME deploy [OPTIONS] BINARY BUCKETURL"
-                
-                Description:
-                     Deploy binary on AWS S3 bucket.
+cat >&2 <<-EOF
+Usage:
+dupper exec -t $REPO_NAME deploy [OPTIONS] BINARY BUCKETURL
 
-                Options:
-                  --region STRING    AWS region for S3 bucket, default $_region 
-                  --acl    STRING    AWS acl, default publis-read 
-EOM              
+Description:
+     Deploy binary on AWS S3 bucket.
+
+Options:
+  --region STRING    AWS region for S3 bucket, default $_region 
+  --acl    STRING    AWS acl, default publis-read 
+EOF
               exit 1
           fi
-          
+        
+          set -x
           aws configure
-          aws --region ${_region} s3 cp ${_binary} ${_s3url}/${_binary} --acl ${_acl}
+          aws --region ${_region} s3 cp ${_binary} ${_bucketurl}/${_binary} --acl ${_acl}
         '''
     }] 
   }
