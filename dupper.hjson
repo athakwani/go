@@ -10,9 +10,13 @@
       name: "linux-dependencies",
       cmd:
       '''
-        apt-get install -y vim curl golang make python-pip
+        apt-get install -y vim curl make python-pip
         wget -O /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64
         chmod +x /usr/local/bin/jq
+        mkdir $HOME/bin
+        curl -sL -o $HOME/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme
+        chmod +x $HOME/bin/gimme        
+        GIMME_OUTPUT=$($HOME/bin/gimme 1.7) && eval "$GIMME_OUTPUT"
       '''
     },
     {
@@ -23,7 +27,7 @@
       '''
     },
     {
-      name: "go-packages",
+      name: "go-dependencies",
       cmd:
       '''
         cd $REPO_ROOT 
