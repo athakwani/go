@@ -57,7 +57,7 @@
       '''
         GIMME_OUTPUT=$($HOME/bin/gimme 1.7) && eval "$GIMME_OUTPUT"
         cd $REPO_ROOT
-        go build
+        go build $*
       '''
     }],    
     test: [{
@@ -65,7 +65,7 @@
       '''     
         GIMME_OUTPUT=$($HOME/bin/gimme 1.7) && eval "$GIMME_OUTPUT"
         cd $REPO_ROOT
-        go test
+        go test $*
       '''
     }],
     c9: [{
@@ -141,6 +141,7 @@ EOF
           set -x
           aws configure
           aws --region ${_region} s3 cp ${_binary} ${_bucketurl}/${_binary} --acl ${_acl}
+          set +x
         '''
     }] 
   }
